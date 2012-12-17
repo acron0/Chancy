@@ -1,1 +1,6 @@
 bin/
+obj/
+testapp/
+
+*.sln*
+*.suo

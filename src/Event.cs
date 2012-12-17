@@ -64,7 +64,15 @@ namespace Chancy
 		/// <value>
 		/// <c>true</c> if this instance is running; otherwise, <c>false</c>.
 		/// </value>
-		public bool IsRunning { get; private set; }
+        public bool IsRunning { get { return IsRunningSingular || AnySibling(e => e.IsRunningSingular); } }
+
+        /// <summary>
+        /// Internal: Indicates whether this individual event is running (IsRunning is the whole event stack).
+        /// </summary>
+        /// <value>
+        /// <c>true</c> if this singular instance is running; otherwise, <c>false</c>.
+        /// </value>
+        internal bool IsRunningSingular { get; private set; }
 
 		#endregion
 
@@ -74,6 +82,11 @@ namespace Chancy
 		/// The total running time for this event.
 		/// </summary>
 		private float _totalRunningTime;
+
+        /// <summary>
+        /// Internal boolean for IsRunning property.
+        /// </summary>
+        private bool _isRunning;
 
 		#endregion
 
@@ -111,11 +124,19 @@ namespace Chancy
 		/// <summary>
 		/// Start this instance.
 		/// </summary>
-		public void Start ()
+		public Event Start ()
 		{
-			IsRunning = true;
+            // go both ways - return here because once we hit the bottom event we'll climb all the way back up.
+            if (Next != null && !Next.IsRunning)
+            {
+                Next.Start();
+                return this;
+            }
+
+            IsRunningSingular = true;
 			if(Previous != null)
 				Previous.Start ();
+            return this;
 		}
 
 		/// <summary>
@@ -154,9 +175,41 @@ namespace Chancy
 		/// </summary>
 		internal void EndEvent()
 		{
+            IsRunningSingular = false;
 			if(Ended != null)
 				Ended(new EventEndArgs());
 		}
+
+        /// <summary>
+        /// Returns true if any sibling matches predicate
+        /// </summary>
+        /// <param name="match"></param>
+        /// <returns></returns>
+        internal bool AnySibling(Func<Event, bool> match)
+        {
+            if(!match(this))
+            {
+                Event sibling = Previous;
+                while (sibling != null)
+                {
+                    if (match(sibling))
+                        return true;
+                    sibling = sibling.Previous;
+                }
+
+                sibling = Next;
+                while (sibling != null)
+                {
+                    if (match(sibling))
+                        return true;
+                    sibling = sibling.Next;
+                }
+
+                return false;
+            }
+
+            return true;
+        }
 
 		#endregion
 	}
