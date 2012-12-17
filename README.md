@@ -30,6 +30,8 @@ Evented actions are represented as extensions, making it infinitely extensible a
         {
             transform.x = x;
         };
+        
+        return ev.Extend();
     }
                      
 TODO:
