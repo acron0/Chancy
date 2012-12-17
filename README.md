@@ -1,7 +1,7 @@
 Chancy
 ======
 
-Chancy is an event flow control system in C#; it facilitates the composition of complex event structures primarily for use in games, UIs and other visual applications.
+Chancy is an event sequencing system in C#; it facilitates the composition of complex event structures primarily for use in games, UIs and other visual applications.
 
 The goal was to create an intuitive, flexible framework that was easy to read, even when things got complicated (a DSL would be ideal but C# 3.5 does not support it without tools).
 
