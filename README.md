@@ -21,7 +21,7 @@ Evented actions are represented as extensions, making it infinitely extensible a
         
         ev.Updated += (args) =>
         {
-            float newX = x * Math.Max(1.0f, args.TotalTime / duration) + startX;
+            float newX = ((x-startX) * Math.Min(1.0f, args.TotalTime / duration)) + startX;
             transform.x = newX;
             return args.TotalTime >= duration;
         };
