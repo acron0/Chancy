@@ -12,6 +12,7 @@ The result:
                      .MoveToX(transform, 100.0f, 1.0f)
                      .Log("Hi, I'm here!")
                      .UniformScaleTo(transform, 2.0f, 0.5f)
+                     .Start();
                      
 Evented actions are represented as extensions, making it infinitely extensible and customizable. As an example, here's the contents of the MoveToX function:
 
