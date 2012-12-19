@@ -100,7 +100,7 @@ namespace Chancy
 		/// </summary>
 		static public Event Create()
 		{
-			Event newEvent = new Event();
+			Event newEvent = Controller.InitEvent(new Event());
 			Controller.AddEvent(newEvent);
 			return newEvent;
 		}

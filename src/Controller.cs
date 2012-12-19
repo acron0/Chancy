@@ -37,6 +37,24 @@ namespace Chancy
 		}
 
 		/// <summary>
+		/// Pushes the event through an event init routine.
+		/// </summary>
+		/// <returns>
+		/// Primed event.
+		/// </returns>
+		/// <param name='newEvent'>
+		/// The event to be init
+		/// </param>
+		static internal Event InitEvent (Event newEvent)
+		{
+			if(newEvent.Next != null || newEvent.Previous != null)
+				throw new ArgumentException("Only brand new events (no siblings) can be initialised.");
+
+			// we automatically add a 'sequence' event to this root event
+			return newEvent.Sequence();
+		}
+
+		/// <summary>
 		/// Updates all the events with the specified deltaTime.
 		/// </summary>
 		/// <param name='deltaTime'>
