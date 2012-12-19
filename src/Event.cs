@@ -83,11 +83,6 @@ namespace Chancy
 		/// </summary>
 		private float _totalRunningTime;
 
-        /// <summary>
-        /// Internal boolean for IsRunning property.
-        /// </summary>
-        private bool _isRunning;
-
 		#endregion
 
 		#region Methods
