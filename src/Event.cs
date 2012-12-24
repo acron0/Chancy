@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace Chancy
 {
@@ -32,17 +34,54 @@ namespace Chancy
 		/// <summary>
 		/// Occurs when the Event starts.
 		/// </summary>
-		public event EventStartDelegate Started;
+		private event EventStartDelegate _started;
+		public  event EventStartDelegate Started {
+			add {
+				if (_started == null)
+					_started += value;
+				else
+					throw new Exception ("Events can only contain a single delegate for each state. Please use Event.Extend() to add a new Event to the stack");
+			}
+
+			remove {
+				_started -= value;
+			}
+		}
 
 		/// <summary>
 		/// Occurs when update. Return 'true' to indicate that the Event is over.
 		/// </summary>
-		public event EventUpdateDelegate Updated;
+		private event EventUpdateDelegate _updated;
+		public  event EventUpdateDelegate Updated {
+			add 
+			{
+				if(_updated == null)
+					_updated += value;
+				else
+					throw new Exception("Events can only contain a single delegate for each state. Please use Event.Extend() to add a new Event to the stack");
+			}
+
+			remove {
+				_updated -= value;
+			}
+		}
 
 		/// <summary>
 		/// Occurs when the Event ends.
 		/// </summary>
-		public event EventEndDelegate Ended;
+		private event EventEndDelegate _ended;
+		public  event EventEndDelegate Ended {
+			add {
+				if (_ended == null)
+					_ended += value;
+				else
+					throw new Exception ("Events can only contain a single delegate for each state. Please use Event.Extend() to add a new Event to the stack");
+			}
+
+			remove {
+				_ended -= value;
+			}
+		}		
 
 		#endregion
 
@@ -74,6 +113,14 @@ namespace Chancy
         /// </value>
         internal bool IsRunningSingular { get; private set; }
 
+		/// <summary>
+		/// Internal: Gets a value indicating whether this instance is an event collection.
+		/// </summary>
+		/// <value>
+		/// <c>true</c> if this instance is an event collection; otherwise, <c>false</c>.
+		/// </value>
+		internal bool IsEventCollection { get; private set; }
+
 		#endregion
 
 		#region Variables
@@ -100,9 +147,7 @@ namespace Chancy
 		/// </summary>
 		static public Event Create()
 		{
-			Event newEvent = Controller.InitEvent(new Event());
-			Controller.AddEvent(newEvent);
-			return newEvent;
+			return Controller.InitEvent(new Event());
 		}
 
 		/// <summary>
@@ -121,17 +166,26 @@ namespace Chancy
 		/// </summary>
 		public Event Start ()
 		{
-            // go both ways - return here because once we hit the bottom event we'll climb all the way back up.
-            if (Next != null && !Next.IsRunning)
-            {
-                Next.Start();
-                return this;
-            }
-
-            IsRunningSingular = true;
-			if(Previous != null)
+			// We ONLY want to start the top of the stack            
+			if (Previous != null) 
+			{
 				Previous.Start ();
+			}
+			else 
+			{
+				Controller.AddEvent(this);
+				IsRunningSingular = true;
+			}
+
             return this;
+		}
+
+		/// <summary>
+		/// Marks this event as an event collection.
+		/// </summary>
+		internal void MakeEventCollection ()
+		{
+			IsEventCollection = true;
 		}
 
 		/// <summary>

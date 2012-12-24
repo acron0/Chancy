@@ -64,13 +64,10 @@ namespace Chancy
 		{
 			foreach (Event e in _pendingAdd) 
 			{
-                if (e.IsRunningSingular)
-				{
-					e.StartEvent();
-                    _currentEvents.Add(e);
-				}
+				e.StartEvent();
+                _currentEvents.Add(e);
 			}
-            _pendingAdd.RemoveAll(e => e.IsRunningSingular);
+            _pendingAdd.Clear();
 
 
 			foreach (Event e in _currentEvents) 
@@ -83,8 +80,6 @@ namespace Chancy
 			{
 				e.EndEvent();
 				_currentEvents.Remove(e);
-				if (e.Next != null)
-					AddEvent(e.Next);
 			}
 			_pendingRemove.Clear();
 		}
