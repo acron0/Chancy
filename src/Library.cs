@@ -10,7 +10,7 @@ namespace Chancy
         /// </summary>
         /// <param name="ev"></param>
         /// <returns></returns>
-        private static Event CollectRelevantEvents(Action<Event> addFn, Event ev, Action extraOps = null)
+        private static void SetUpEventCollectionDelegates(Action<Event> addFn, Event ev, Action extraOps = null)
         {
             Queue<Event> seqEvents = new Queue<Event>();
             Event returnEvent = null;
@@ -40,8 +40,6 @@ namespace Chancy
                     if (returnEvent != null)
                         returnEvent.Start(true);
                 };
-
-            return returnEvent;
         }
 
 		public static Event Sequence(this Event ev)
@@ -55,7 +53,7 @@ namespace Chancy
                 top.Start(true);
             };
 
-            CollectRelevantEvents(seqEvents.Enqueue, ev, nextEvent);
+            SetUpEventCollectionDelegates(seqEvents.Enqueue, ev, nextEvent);
 
             ev.Updated += (args) =>
                 {
@@ -81,16 +79,31 @@ namespace Chancy
 		{
             ev.MakeEventCollection();
             List<Event> listEvents = new List<Event>();
-            CollectRelevantEvents(listEvents.Add, ev); ;
+			Action allStart = () =>
+            {
+                listEvents.ForEach(e => e.Start (true));
+            };
+
+            SetUpEventCollectionDelegates(listEvents.Add, ev, allStart);
+
+			ev.Updated += (args) => 
+			{
+				return listEvents.TrueForAll(e => !e.IsRunningSingular);
+			};
 
 			return ev.Extend();
 		}
 
-		public static Event Loop (this Event ev)
+		public static Event Loop (this Event ev, int times)
 		{
             ev.MakeEventCollection();
             Queue<Event> seqEvents = new Queue<Event>();
-            CollectRelevantEvents(seqEvents.Enqueue, ev);
+            SetUpEventCollectionDelegates(seqEvents.Enqueue, ev);
+
+			//ev.Updated += (args) => 
+			//{
+			//	ret
+			//};
 
 			return ev.Extend();
 		}
