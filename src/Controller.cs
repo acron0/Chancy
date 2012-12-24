@@ -10,7 +10,12 @@ namespace Chancy
 		/// <summary
 		/// New events are added to this list before being appended to the update list.
 		/// </summary>
-		static private List<Event> _pendingAdd;
+        static private List<Event> _pendingAddPrimary;
+
+        /// <summary
+        /// New events are added to this list before being appended to the update list.
+        /// </summary>
+        static private List<Event> _pendingAddSecondary;
 
 		/// <summary>
 		/// The current events.
@@ -22,6 +27,11 @@ namespace Chancy
 		/// </summary>
 		static private List<Event> _pendingRemove;
 
+        /// <summary>
+        /// Indicates whether we're current in an update or not.
+        /// </summary>
+        static private bool _lockAdd;
+
 		#endregion
 
 		#region Methods
@@ -31,9 +41,11 @@ namespace Chancy
 		/// </summary>
 		static Controller ()
 		{
-			_pendingAdd = new List<Event>();
+			_pendingAddPrimary = new List<Event>();
+            _pendingAddSecondary = new List<Event>();
 			_currentEvents = new List<Event>();
 			_pendingRemove = new List<Event>();
+            _lockAdd = false;
 		}
 
 		/// <summary>
@@ -62,19 +74,39 @@ namespace Chancy
 		/// </param>
 		static public void Update (float deltaTime)
 		{
-			foreach (Event e in _pendingAdd) 
+            _lockAdd = true;
+
+            ///
+
+            foreach (Event e in _pendingAddPrimary) 
 			{
 				e.StartEvent();
                 _currentEvents.Add(e);
 			}
-            _pendingAdd.Clear();
+            _pendingAddPrimary.Clear();
 
+            ///
+
+            _lockAdd = false;
+
+            ///
+
+            foreach (Event e in _pendingAddSecondary)
+            {
+                e.StartEvent();
+                _currentEvents.Add(e);
+            }
+            _pendingAddSecondary.Clear(); 
+
+            ///
 
 			foreach (Event e in _currentEvents) 
 			{
 				if(e.UpdateEvent(deltaTime))
 					_pendingRemove.Add(e);
 			}
+
+            ///
 
 			foreach (Event e in _pendingRemove) 
 			{
@@ -92,7 +124,10 @@ namespace Chancy
 		/// </param>
 		static internal void AddEvent(Event newEvent)
 		{
-			_pendingAdd.Add(newEvent);
+            if (!_lockAdd)
+			    _pendingAddPrimary.Add(newEvent);
+            else
+                _pendingAddSecondary.Add(newEvent);
 		}
 
 		#endregion

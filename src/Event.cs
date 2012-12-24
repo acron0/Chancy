@@ -166,19 +166,30 @@ namespace Chancy
 		/// </summary>
 		public Event Start ()
 		{
-			// We ONLY want to start the top of the stack            
-			if (Previous != null) 
-			{
-				Previous.Start ();
-			}
-			else 
-			{
-				Controller.AddEvent(this);
-				IsRunningSingular = true;
-			}
+           return Start(false);
+		}
+
+        /// <summary>
+        /// Start this instance.
+        /// </summary>
+        internal Event Start(bool ignorePrevious)
+        {
+            if (IsRunningSingular)
+                return this;
+
+            // We ONLY want to start the top of the stack            
+            if (Previous != null && !ignorePrevious)
+            {
+                Previous.Start();
+            }
+            else
+            {
+                Controller.AddEvent(this);
+                IsRunningSingular = true;
+            }
 
             return this;
-		}
+        }
 
 		/// <summary>
 		/// Marks this event as an event collection.
@@ -195,8 +206,8 @@ namespace Chancy
 		{
 			_totalRunningTime = 0.0f;
 
-			if(Started != null)
-				Started(new EventStartArgs());
+			if(_started != null)
+				_started(new EventStartArgs());
 		}
 
 		/// <summary>
@@ -213,8 +224,8 @@ namespace Chancy
 			float lastTTR = _totalRunningTime;
 			_totalRunningTime += dt;
 
-			if(Updated != null)
-				return Updated(new EventUpdateArgs(lastTTR == 0.0f ? 0.0f : dt, lastTTR));
+			if(_updated != null)
+                return _updated(new EventUpdateArgs(lastTTR == 0.0f ? 0.0f : dt, lastTTR));
 			else
 				return true;
 		}
@@ -224,9 +235,10 @@ namespace Chancy
 		/// </summary>
 		internal void EndEvent()
 		{
+			if(_ended != null)
+                _ended(new EventEndArgs());
+
             IsRunningSingular = false;
-			if(Ended != null)
-				Ended(new EventEndArgs());
 		}
 
         /// <summary>
