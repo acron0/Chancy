@@ -39,7 +39,7 @@ namespace Chancy
                 {
                     if (returnEvent != null)
                         returnEvent.Start(true);
-                };
+				};
         }
 
 		public static Event Sequence(this Event ev)
