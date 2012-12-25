@@ -10,12 +10,12 @@ namespace Chancy
 		/// <summary
 		/// New events are added to this list before being appended to the update list.
 		/// </summary>
-        static private List<Event> _pendingAddPrimary;
+		static private List<Event> _pendingAddPrimary;
 
-        /// <summary
-        /// New events are added to this list before being appended to the update list.
-        /// </summary>
-        static private List<Event> _pendingAddSecondary;
+		/// <summary
+		/// New events are added to this list before being appended to the update list.
+		/// </summary>
+		static private List<Event> _pendingAddSecondary;
 
 		/// <summary>
 		/// The current events.
@@ -27,10 +27,10 @@ namespace Chancy
 		/// </summary>
 		static private List<Event> _pendingRemove;
 
-        /// <summary>
-        /// Indicates whether we're current in an update or not.
-        /// </summary>
-        static private bool _lockAdd;
+		/// <summary>
+		/// Indicates whether we're current in an update or not.
+		/// </summary>
+		static private bool _lockAdd;
 
 		#endregion
 
@@ -41,11 +41,11 @@ namespace Chancy
 		/// </summary>
 		static Controller ()
 		{
-			_pendingAddPrimary = new List<Event>();
-            _pendingAddSecondary = new List<Event>();
-			_currentEvents = new List<Event>();
-			_pendingRemove = new List<Event>();
-            _lockAdd = false;
+			_pendingAddPrimary = new List<Event> ();
+			_pendingAddSecondary = new List<Event> ();
+			_currentEvents = new List<Event> ();
+			_pendingRemove = new List<Event> ();
+			_lockAdd = false;
 		}
 
 		/// <summary>
@@ -59,11 +59,11 @@ namespace Chancy
 		/// </param>
 		static internal Event InitEvent (Event newEvent)
 		{
-			if(newEvent.Next != null || newEvent.Previous != null)
-				throw new ArgumentException("Only brand new events (no siblings) can be initialised.");
+			if (newEvent.Next != null || newEvent.Previous != null)
+				throw new ArgumentException ("Only brand new events (no siblings) can be initialised.");
 
 			// we automatically add a 'sequence' event to this root event
-			return newEvent.Sequence();
+			return newEvent.Sequence ();
 		}
 
 		/// <summary>
@@ -74,46 +74,42 @@ namespace Chancy
 		/// </param>
 		static public void Update (float deltaTime)
 		{
-            _lockAdd = true;
+			_lockAdd = true;
 
-            ///
+			///
 
-            foreach (Event e in _pendingAddPrimary) 
-			{
-				e.StartEvent();
-                _currentEvents.Add(e);
+			foreach (Event e in _pendingAddPrimary) {
+				e.StartEvent ();
+				_currentEvents.Add (e);
 			}
-            _pendingAddPrimary.Clear();
+			_pendingAddPrimary.Clear ();
 
-            ///
+			///
 
-            _lockAdd = false;
+			_lockAdd = false;
 
-            ///
+			///
 
-            foreach (Event e in _pendingAddSecondary)
-            {
-                e.StartEvent();
-                _currentEvents.Add(e);
-            }
-            _pendingAddSecondary.Clear(); 
+			foreach (Event e in _pendingAddSecondary) {
+				e.StartEvent ();
+				_currentEvents.Add (e);
+			}
+			_pendingAddSecondary.Clear (); 
 
-            ///
+			///
 
-			foreach (Event e in _currentEvents) 
-			{
-				if(e.UpdateEvent(deltaTime))
-					_pendingRemove.Add(e);
+			foreach (Event e in _currentEvents) {
+				if (e.UpdateEvent (deltaTime))
+					_pendingRemove.Add (e);
 			}
 
-            ///
+			///
 
-			foreach (Event e in _pendingRemove) 
-			{
-				e.EndEvent();
-				_currentEvents.Remove(e);
+			foreach (Event e in _pendingRemove) {
+				e.EndEvent ();
+				_currentEvents.Remove (e);
 			}
-			_pendingRemove.Clear();
+			_pendingRemove.Clear ();
 		}
 
 		/// <summary>
@@ -122,12 +118,12 @@ namespace Chancy
 		/// <param name='newEvent'>
 		/// The new event we're adding.
 		/// </param>
-		static internal void AddEvent(Event newEvent)
+		static internal void AddEvent (Event newEvent)
 		{
-            if (!_lockAdd)
-			    _pendingAddPrimary.Add(newEvent);
-            else
-                _pendingAddSecondary.Add(newEvent);
+			if (!_lockAdd)
+				_pendingAddPrimary.Add (newEvent);
+			else
+				_pendingAddSecondary.Add (newEvent);
 		}
 
 		#endregion

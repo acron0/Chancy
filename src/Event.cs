@@ -15,8 +15,10 @@ namespace Chancy
 		public class EventUpdateArgs
 		{
 			public float TotalTime { get; private set; }
+
 			public float DeltaTime { get; private set; }
-			public EventUpdateArgs(float deltaTime, float totalTime)
+
+			public EventUpdateArgs (float deltaTime, float totalTime)
 			{
 				TotalTime = totalTime;
 				DeltaTime = deltaTime;
@@ -27,14 +29,17 @@ namespace Chancy
 		{
 		};
 
-		public delegate void EventStartDelegate(EventStartArgs args);
-		public delegate bool EventUpdateDelegate(EventUpdateArgs args);
-		public delegate void EventEndDelegate(EventEndArgs args);
+		public delegate void EventStartDelegate (EventStartArgs args);
+
+		public delegate bool EventUpdateDelegate (EventUpdateArgs args);
+
+		public delegate void EventEndDelegate (EventEndArgs args);
 
 		/// <summary>
 		/// Occurs when the Event starts.
 		/// </summary>
 		private event EventStartDelegate _started;
+
 		public  event EventStartDelegate Started {
 			add {
 				if (_started == null)
@@ -52,13 +57,13 @@ namespace Chancy
 		/// Occurs when update. Return 'true' to indicate that the Event is over.
 		/// </summary>
 		private event EventUpdateDelegate _updated;
+
 		public  event EventUpdateDelegate Updated {
-			add 
-			{
-				if(_updated == null)
+			add {
+				if (_updated == null)
 					_updated += value;
 				else
-					throw new Exception("Events can only contain a single delegate for each state. Please use Event.Extend() to add a new Event to the stack");
+					throw new Exception ("Events can only contain a single delegate for each state. Please use Event.Extend() to add a new Event to the stack");
 			}
 
 			remove {
@@ -70,6 +75,7 @@ namespace Chancy
 		/// Occurs when the Event ends.
 		/// </summary>
 		private event EventEndDelegate _ended;
+
 		public  event EventEndDelegate Ended {
 			add {
 				if (_ended == null)
@@ -103,15 +109,15 @@ namespace Chancy
 		/// <value>
 		/// <c>true</c> if this instance is running; otherwise, <c>false</c>.
 		/// </value>
-        public bool IsRunning { get { return IsRunningSingular || AnySibling(e => e.IsRunningSingular); } }
+		public bool IsRunning { get { return IsRunningSingular || AnySibling (e => e.IsRunningSingular); } }
 
-        /// <summary>
-        /// Internal: Indicates whether this individual event is running (IsRunning is the whole event stack).
-        /// </summary>
-        /// <value>
-        /// <c>true</c> if this singular instance is running; otherwise, <c>false</c>.
-        /// </value>
-        internal bool IsRunningSingular { get; private set; }
+		/// <summary>
+		/// Internal: Indicates whether this individual event is running (IsRunning is the whole event stack).
+		/// </summary>
+		/// <value>
+		/// <c>true</c> if this singular instance is running; otherwise, <c>false</c>.
+		/// </value>
+		internal bool IsRunningSingular { get; private set; }
 
 		/// <summary>
 		/// Internal: Gets a value indicating whether this instance is an event collection.
@@ -145,17 +151,17 @@ namespace Chancy
 		/// <summary>
 		/// Public c'tor.	
 		/// </summary>
-		static public Event Create()
+		static public Event Create ()
 		{
-			return Controller.InitEvent(new Event());
+			return Controller.InitEvent (new Event ());
 		}
 
 		/// <summary>
 		/// Extends this instance by creating a new Event and setting the sibl.
 		/// </summary>
-		public Event Extend()
+		public Event Extend ()
 		{
-			Event newEvent = new Event();
+			Event newEvent = new Event ();
 			Next = newEvent;
 			newEvent.Previous = this;
 			return newEvent;
@@ -166,30 +172,27 @@ namespace Chancy
 		/// </summary>
 		public Event Start ()
 		{
-           return Start(false);
+			return Start (false);
 		}
 
-        /// <summary>
-        /// Start this instance.
-        /// </summary>
-        internal Event Start(bool ignorePrevious)
-        {
-            if (IsRunningSingular)
-                return this;
+		/// <summary>
+		/// Start this instance.
+		/// </summary>
+		internal Event Start (bool ignorePrevious)
+		{
+			if (IsRunningSingular)
+				return this;
 
-            // We ONLY want to start the top of the stack            
-            if (Previous != null && !ignorePrevious)
-            {
-                Previous.Start();
-            }
-            else
-            {
-                Controller.AddEvent(this);
-                IsRunningSingular = true;
-            }
+			// We ONLY want to start the top of the stack            
+			if (Previous != null && !ignorePrevious) {
+				Previous.Start ();
+			} else {
+				Controller.AddEvent (this);
+				IsRunningSingular = true;
+			}
 
-            return this;
-        }
+			return this;
+		}
 
 		/// <summary>
 		/// Marks this event as an event collection.
@@ -202,12 +205,12 @@ namespace Chancy
 		/// <summary>
 		/// Starts the event.
 		/// </summary>
-		internal void StartEvent()
+		internal void StartEvent ()
 		{
 			_totalRunningTime = 0.0f;
 
-			if(_started != null)
-				_started(new EventStartArgs());
+			if (_started != null)
+				_started (new EventStartArgs ());
 		}
 
 		/// <summary>
@@ -219,13 +222,13 @@ namespace Chancy
 		/// <param name='dt'>
 		/// The delta time since the last update.
 		/// </param>
-		internal bool UpdateEvent(float dt)
+		internal bool UpdateEvent (float dt)
 		{
 			float lastTTR = _totalRunningTime;
 			_totalRunningTime += dt;
 
-			if(_updated != null)
-                return _updated(new EventUpdateArgs(lastTTR == 0.0f ? 0.0f : dt, lastTTR));
+			if (_updated != null)
+				return _updated (new EventUpdateArgs (lastTTR == 0.0f ? 0.0f : dt, lastTTR));
 			else
 				return true;
 		}
@@ -233,44 +236,41 @@ namespace Chancy
 		/// <summary>
 		/// Ends the event.
 		/// </summary>
-		internal void EndEvent()
+		internal void EndEvent ()
 		{
-			if(_ended != null)
-                _ended(new EventEndArgs());
+			if (_ended != null)
+				_ended (new EventEndArgs ());
 
-            IsRunningSingular = false;
+			IsRunningSingular = false;
 		}
 
-        /// <summary>
-        /// Returns true if any sibling matches predicate
-        /// </summary>
-        /// <param name="match"></param>
-        /// <returns></returns>
-        internal bool AnySibling(Func<Event, bool> match)
-        {
-            if(!match(this))
-            {
-                Event sibling = Previous;
-                while (sibling != null)
-                {
-                    if (match(sibling))
-                        return true;
-                    sibling = sibling.Previous;
-                }
+		/// <summary>
+		/// Returns true if any sibling matches predicate
+		/// </summary>
+		/// <param name="match"></param>
+		/// <returns></returns>
+		internal bool AnySibling (Func<Event, bool> match)
+		{
+			if (!match (this)) {
+				Event sibling = Previous;
+				while (sibling != null) {
+					if (match (sibling))
+						return true;
+					sibling = sibling.Previous;
+				}
 
-                sibling = Next;
-                while (sibling != null)
-                {
-                    if (match(sibling))
-                        return true;
-                    sibling = sibling.Next;
-                }
+				sibling = Next;
+				while (sibling != null) {
+					if (match (sibling))
+						return true;
+					sibling = sibling.Next;
+				}
 
-                return false;
-            }
+				return false;
+			}
 
-            return true;
-        }
+			return true;
+		}
 
 		#endregion
 	}
