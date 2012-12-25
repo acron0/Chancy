@@ -14,6 +14,14 @@ The result:
                      .UniformScaleTo(transform, 2.0f, 0.5f)
                      .Start();
                      
+More complex flow control can be represented by collection controls:
+
+    var event = Event.Create()
+                     .Wait(1.0)
+                .Compound()
+                     .MoveToY(transform, 20.f, 1.0f)
+                     .ScaleToX(transform, 3.0f, 0.5f) 
+                     
 Evented actions are represented as extensions, making it infinitely extensible and customizable. As an example, here's the contents of the MoveToX function:
 
     public static Event MoveToX(this Event ev, Transform transform, float x, float duration)
