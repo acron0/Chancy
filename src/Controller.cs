@@ -49,24 +49,6 @@ namespace Chancy
 		}
 
 		/// <summary>
-		/// Pushes the event through an event init routine.
-		/// </summary>
-		/// <returns>
-		/// Primed event.
-		/// </returns>
-		/// <param name='newEvent'>
-		/// The event to be init
-		/// </param>
-		static internal Event InitEvent (Event newEvent)
-		{
-			if (newEvent.Next != null || newEvent.Previous != null)
-				throw new ArgumentException ("Only brand new events (no siblings) can be initialised.");
-
-			// we automatically add a 'sequence' event to this root event
-			return newEvent.Sequence ();
-		}
-
-		/// <summary>
 		/// Updates all the events with the specified deltaTime.
 		/// </summary>
 		/// <param name='deltaTime'>
@@ -100,7 +82,12 @@ namespace Chancy
 
 			foreach (Event e in _currentEvents) {
 				if (e.UpdateEvent (deltaTime))
+				{
+					if(e.Next != null)
+						e.Next.StartEx(false, true);
+
 					_pendingRemove.Add (e);
+				}
 			}
 
 			///
@@ -118,12 +105,35 @@ namespace Chancy
 		/// <param name='newEvent'>
 		/// The new event we're adding.
 		/// </param>
-		static internal void AddEvent (Event newEvent)
+		static internal void AddEvent (Event newEvent, bool startImmediately)
 		{
-			if (!_lockAdd)
+			if(startImmediately)
+			{
+				newEvent.StartEvent ();
+				_currentEvents.Add (newEvent);
+			}
+			else if (!_lockAdd)
+			{
 				_pendingAddPrimary.Add (newEvent);
+			}
 			else
+			{
 				_pendingAddSecondary.Add (newEvent);
+			}
+		}
+
+		/// <summary>
+		/// Determines whether this instance is pending the specified ev.
+		/// </summary>
+		/// <returns>
+		/// <c>true</c> if this instance is pending the specified ev; otherwise, <c>false</c>.
+		/// </returns>
+		/// <param name='ev'>
+		/// If set to <c>true</c> ev.
+		/// </param>
+		static internal bool IsPending(Event ev)
+		{
+			return _pendingAddPrimary.Contains(ev) || _pendingAddSecondary.Contains(ev);
 		}
 
 		#endregion

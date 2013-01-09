@@ -5,91 +5,63 @@ namespace Chancy
 {
 	public static class Library
 	{
-		/// <summary>
-		/// Creates a Started delegate for event collections.
-		/// </summary>
-		/// <param name="ev"></param>
-		/// <returns></returns>
-		private static void SetUpEventCollectionDelegates (Action<Event> addFn, Event ev, Action extraOps = null)
+		public static Event Sequence (this Event ev, Action<Event> action)
 		{
-			Queue<Event> seqEvents = new Queue<Event> ();
-			Event returnEvent = null;
+			Event seq = Event.Create();
+			action(seq);
+
 			ev.Started += (args) =>
 			{
-				Event next = ev.Next;
-				while (next != null) {
-					if (next.IsEventCollection) {
-						returnEvent = next;
-						next = null;
-					} else {
-						addFn (next);
-						next = next.Next;
-					}
-				}
-
-				if (extraOps != null)
-					extraOps ();
+				seq.StartEx(true, true);
 			};
-
-			ev.Ended += (args) =>
-			{
-				if (returnEvent != null)
-					returnEvent.Start (true);
-			};
-		}
-
-		public static Event Sequence (this Event ev)
-		{
-			ev.MakeEventCollection ();
-			Queue<Event> seqEvents = new Queue<Event> ();
-			Event top = null;
-			Action nextEvent = () =>
-			{
-				top = seqEvents.Dequeue ();
-				top.Start (true);
-			};
-
-			SetUpEventCollectionDelegates (seqEvents.Enqueue, ev, nextEvent);
 
 			ev.Updated += (args) =>
 			{
-				if (top.IsRunningSingular) {
+				if (seq.IsRunningSingular) {
 					return false;
-				} else if (seqEvents.Count != 0) {
-					nextEvent ();
+				} else if (seq.Next != null) {
+					seq = seq.Next;
+					seq.StartEx (true, true);
 					return false;
 				} else {
 					return true;
 				}
 			};
 
-			return ev.Extend ();
+			return ev.Extend();
 		}
 
-		public static Event Compound (this Event ev)
+		public static Event Compound (this Event ev, Action<Event> action)
 		{
-			ev.MakeEventCollection ();
-			List<Event> listEvents = new List<Event> ();
-			Action allStart = () =>
-			{
-				listEvents.ForEach (e => e.Start (true));
-			};
+			List<Event> events = new List<Event> ();
+			Event comp = Event.Create();
+			action(comp);
 
-			SetUpEventCollectionDelegates (listEvents.Add, ev, allStart);
+			ev.Started += (args) => 
+			{
+				Event e = comp;
+				do
+				{
+					events.Add(e);
+					e.StartEx(true, true);
+					Event t = e.Next;
+					e.Detach();
+					e = t;
+
+				}while(e != null);
+			};
 
 			ev.Updated += (args) => 
 			{
-				return listEvents.TrueForAll (e => !e.IsRunningSingular);
+				return events.TrueForAll(e=>!e.IsRunningSingular);
 			};
 
 			return ev.Extend ();
 		}
 
-		public static Event Loop (this Event ev, int times)
+		public static Event Loop (this Event ev, int times, Action<Event> action)
 		{
-			ev.MakeEventCollection ();
 			Queue<Event> seqEvents = new Queue<Event> ();
-			SetUpEventCollectionDelegates (seqEvents.Enqueue, ev);
 
 			//ev.Updated += (args) => 
 			//{
@@ -98,8 +70,6 @@ namespace Chancy
 
 			return ev.Extend ();
 		}
-
-		//
 	}
 }
 

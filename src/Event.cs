@@ -109,7 +109,7 @@ namespace Chancy
 		/// <value>
 		/// <c>true</c> if this instance is running; otherwise, <c>false</c>.
 		/// </value>
-		public bool IsRunning { get { return IsRunningSingular || AnySibling (e => e.IsRunningSingular); } }
+		public bool IsRunning { get { return IsRunningSingular || AnySibling (e => e.IsRunningSingular || Controller.IsPending(e) );  } }
 
 		/// <summary>
 		/// Internal: Indicates whether this individual event is running (IsRunning is the whole event stack).
@@ -118,14 +118,6 @@ namespace Chancy
 		/// <c>true</c> if this singular instance is running; otherwise, <c>false</c>.
 		/// </value>
 		internal bool IsRunningSingular { get; private set; }
-
-		/// <summary>
-		/// Internal: Gets a value indicating whether this instance is an event collection.
-		/// </summary>
-		/// <value>
-		/// <c>true</c> if this instance is an event collection; otherwise, <c>false</c>.
-		/// </value>
-		internal bool IsEventCollection { get; private set; }
 
 		#endregion
 
@@ -153,7 +145,7 @@ namespace Chancy
 		/// </summary>
 		static public Event Create ()
 		{
-			return Controller.InitEvent (new Event ());
+			return new Event();
 		}
 
 		/// <summary>
@@ -172,13 +164,13 @@ namespace Chancy
 		/// </summary>
 		public Event Start ()
 		{
-			return Start (false);
+			return StartEx(false, false);
 		}
 
 		/// <summary>
 		/// Start this instance.
 		/// </summary>
-		internal Event Start (bool ignorePrevious)
+		internal Event StartEx (bool startImmediately, bool ignorePrevious )
 		{
 			if (IsRunningSingular)
 				return this;
@@ -187,19 +179,11 @@ namespace Chancy
 			if (Previous != null && !ignorePrevious) {
 				Previous.Start ();
 			} else {
-				Controller.AddEvent (this);
+				Controller.AddEvent (this, startImmediately);
 				IsRunningSingular = true;
 			}
 
 			return this;
-		}
-
-		/// <summary>
-		/// Marks this event as an event collection.
-		/// </summary>
-		internal void MakeEventCollection ()
-		{
-			IsEventCollection = true;
 		}
 
 		/// <summary>
@@ -242,6 +226,14 @@ namespace Chancy
 				_ended (new EventEndArgs ());
 
 			IsRunningSingular = false;
+		}
+
+		/// <summary>
+		/// Detach this event.
+		/// </summary>
+		internal void Detach()
+		{
+			Next = Previous = null;
 		}
 
 		/// <summary>

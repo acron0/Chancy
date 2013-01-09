@@ -14,13 +14,30 @@ The result:
                      .UniformScaleTo(transform, 2.0f, 0.5f)
                      .Start();
                      
-More complex flow control can be represented by collection controls:
+More complex flow control can be represented by collections (Compound/Sequence/Loop):
 
     var event = Event.Create()
                      .Wait(1.0)
-                .Compound()
-                     .MoveToY(transform, 20.f, 1.0f)
-                     .ScaleToX(transform, 3.0f, 0.5f) 
+                	 .Compound(e => {
+                     	e.MoveToY(transform, 20.f, 1.0f)
+                     	 .ScaleToX(transform, 3.0f, 0.5f); 
+                     });
+
+
+    var event = Event.Create()
+                     .Log("Starting animation...")
+                     .Wait(1.0f)
+                     .Compound(e => {
+                     	e.ScaleY(transform, 1.0f, 3.0f, 1.0f)
+                     	 .RotateZ(transform, 0.0f, 180.0f, 1.0f)
+					 	 .Sequence(e2 => {					 	 
+						 	e2.PlaySound("squawk.wav")
+					 	      .Wait(0.5f)
+					 	  	  .Callback(TriggerScoreAnimation); 
+					 	 })
+					 })
+					 .Wait(0.5f)
+					 .Log("Animation ended!");
                      
 Evented actions are represented as extensions, making it infinitely extensible and customizable. As an example, here's the contents of the MoveToX function:
 
@@ -42,7 +59,3 @@ Evented actions are represented as extensions, making it infinitely extensible a
         
         return ev.Extend();
     }
-                     
-TODO:
- - Add sequence types: compound, chain, loop
- - Investigate to remove 'Event.Extend()' dependence.
